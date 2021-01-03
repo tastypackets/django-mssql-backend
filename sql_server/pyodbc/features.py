@@ -36,6 +36,7 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     uses_savepoints = True
     supports_order_by_nulls_modifier = False
     supports_order_by_is_nulls = False
+    order_by_nulls_first = True
 
     @cached_property
     def has_bulk_insert(self):

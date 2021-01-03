@@ -1,7 +1,7 @@
 from django import VERSION
 from django.db.models import BooleanField
 from django.db.models.functions import Cast
-from django.db.models.functions.math import ATan2, Log, Ln, Round
+from django.db.models.functions.math import ATan2, Log, Ln, Mod, Round
 from django.db.models.expressions import Case, Exists, OrderBy, When
 from django.db.models.lookups import Lookup
 
@@ -52,6 +52,10 @@ def sqlserver_log(self, compiler, connection, **extra_context):
 
 def sqlserver_ln(self, compiler, connection, **extra_context):
     return self.as_sql(compiler, connection, function='LOG', **extra_context)
+
+
+def sqlserver_mod(self, compiler, connection, **extra_context):
+    return self.as_sql(compiler, connection, template='%(expressions)s', arg_joiner='%%', **extra_context)
 
 
 def sqlserver_round(self, compiler, connection, **extra_context):
@@ -105,6 +109,7 @@ def sqlserver_orderby(self, compiler, connection):
 ATan2.as_microsoft = sqlserver_atan2
 Log.as_microsoft = sqlserver_log
 Ln.as_microsoft = sqlserver_ln
+Mod.as_microsoft = sqlserver_mod
 Round.as_microsoft = sqlserver_round
 
 if DJANGO3:

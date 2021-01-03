@@ -114,6 +114,8 @@ class DatabaseOperations(BaseDatabaseOperations):
             return "DATEPART(weekday, %s)" % field_name
         elif lookup_type == 'week':
             return "DATEPART(iso_week, %s)" % field_name
+        elif lookup_type == 'iso_year':
+            return "YEAR(DATEADD(day, 26 - DATEPART(isoww, %s), %s))" % (field_name, field_name)
         else:
             return "DATEPART(%s, %s)" % (lookup_type, field_name)
 
@@ -314,7 +316,33 @@ class DatabaseOperations(BaseDatabaseOperations):
         """
         return "ROLLBACK TRANSACTION %s" % sid
 
-    def sql_flush(self, style, tables, *, reset_sequences=False, allow_cascade=False):
+    def _build_sequences(self, sequences, cursor):
+        seqs = []
+        for seq in sequences:
+            cursor.execute("SELECT COUNT(*) FROM %s" % self.quote_name(seq["table"]))
+            rowcnt = cursor.fetchone()[0]
+            elem = {}
+            if rowcnt:
+                elem['start_id'] = 0
+            else:
+                elem['start_id'] = 1
+            elem.update(seq)
+            seqs.append(elem)
+        return seqs
+
+    def _sql_flush_new(self, style, tables, *, reset_sequences=False, allow_cascade=False):
+        if reset_sequences:
+            return [
+                sequence
+                for sequence in self.connection.introspection.sequence_list()
+            ]
+
+        return []
+
+    def _sql_flush_old(self, style, tables, sequences, allow_cascade=False):
+        return sequences
+
+    def sql_flush(self, style, tables, *args, **kwargs):
         """
         Returns a list of SQL statements required to remove all data from
         the given database tables (without actually removing the tables
@@ -329,31 +357,19 @@ class DatabaseOperations(BaseDatabaseOperations):
         The `allow_cascade` argument determines whether truncation may cascade
         to tables with foreign keys pointing the tables being truncated.
         """
+
         if not tables:
             return []
 
-        # Cannot use TRUNCATE on tables that are referenced by a FOREIGN KEY
-        # So must use the much slower DELETE
+        if django.VERSION >= (3, 1):
+            sequences = self._sql_flush_new(style, tables, *args, **kwargs)
+        else:
+            sequences = self._sql_flush_old(style, tables, *args, **kwargs)
+
         from django.db import connections
         cursor = connections[self.connection.alias].cursor()
-        # Try to minimize the risks of the braindeaded inconsistency in
-        # DBCC CHEKIDENT(table, RESEED, n) behavior.
-        seqs = []
-        if reset_sequences:
-            sequences = [
-                sequence
-                for sequence in self.connection.introspection.sequence_list()
-            ]
-            for seq in sequences:
-                cursor.execute("SELECT COUNT(*) FROM %s" % self.quote_name(seq["table"]))
-                rowcnt = cursor.fetchone()[0]
-                elem = {}
-                if rowcnt:
-                    elem['start_id'] = 0
-                else:
-                    elem['start_id'] = 1
-                elem.update(seq)
-                seqs.append(elem)
+
+        seqs = self._build_sequences(sequences, cursor)
 
         COLUMNS = "TABLE_NAME, CONSTRAINT_NAME"
         WHERE = "CONSTRAINT_TYPE not in ('PRIMARY KEY','UNIQUE')"

@@ -8,9 +8,9 @@ set -e
 DJANGO_VERSION="$(python -m django --version)"
 
 cd django
-git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-git checkout $DJANGO_VERSION
-pip install -r tests/requirements/py3.txt
+git fetch -q --depth=1 origin +refs/tags/*:refs/tags/*
+git checkout -q $DJANGO_VERSION
+pip install -q -r tests/requirements/py3.txt
 
 python tests/runtests.py --settings=testapp.settings --noinput --keepdb \
     aggregation \
@@ -77,9 +77,6 @@ python tests/runtests.py --settings=testapp.settings --noinput --keepdb \
     many_to_one \
     max_lengths \
     migrate_signals \
-    migration_test_data_persistence \
-    migrations \
-    migrations2 \
     model_fields \
     model_indexes \
     model_options \
