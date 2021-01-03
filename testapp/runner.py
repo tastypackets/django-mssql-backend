@@ -16,6 +16,6 @@ class ExcludeTestSuiteRunner(DiscoverRunner):
                     continue
                 fullname = f'{cls.__module__}.{cls.__name__}.{attr}'
                 if len(list(filter(fullname.startswith, EXCLUDED_TESTS))):
-                    setattr(cls, attr, skip(getattr(cls, attr)))
+                    setattr(cls, attr, skip('Does not work on MSSQL')(getattr(cls, attr)))
 
         return suite
