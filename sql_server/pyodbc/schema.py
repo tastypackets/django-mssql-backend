@@ -1,5 +1,6 @@
 import binascii
 import datetime
+import django
 
 from django.db.backends.base.schema import (
     BaseDatabaseSchemaEditor,
@@ -677,7 +678,10 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         if self.connection.features.connection_persists_old_columns:
             self.connection.close()
 
-    def _create_unique_sql(self, model, columns, name=None, condition=None):
+    def _create_unique_sql(self, model, columns, name=None, condition=None, deferrable=None):
+        if (deferrable and not getattr(self.connection.features, 'supports_deferrable_unique_constraints', False)):
+            return None
+
         def create_unique_name(*args, **kwargs):
             return self.quote_name(self._create_index_name(*args, **kwargs))
 
@@ -687,6 +691,10 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
         else:
             name = self.quote_name(name)
         columns = Columns(table, columns, self.quote_name)
+        statement_args = {
+            "deferrable": self._deferrable_constraint_sql(deferrable)
+        } if django.VERSION >= (3, 1) else {}
+
         if condition:
             return Statement(
                 self.sql_create_unique_index,
@@ -694,7 +702,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                 name=name,
                 columns=columns,
                 condition=' WHERE ' + condition,
-                deferrable=''
+                **statement_args
             ) if self.connection.features.supports_partial_indexes else None
         else:
             return Statement(
@@ -702,7 +710,7 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
                 table=table,
                 name=name,
                 columns=columns,
-                deferrable=''
+                **statement_args
             )
 
     def _create_index_sql(self, model, fields, *, name=None, suffix='', using='',
