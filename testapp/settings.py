@@ -113,8 +113,6 @@ EXCLUDED_TESTS = (
     'indexes.tests.PartialIndexTests.test_multiple_conditions',
     'indexes.tests.SchemaIndexesNotPostgreSQLTests.test_create_index_ignores_opclasses',
     'inspectdb.tests.InspectDBTestCase.test_introspection_errors',
-    'inspectdb.tests.InspectDBTestCase.test_json_field',
-    'inspectdb.tests.InspectDBTestCase.test_number_field_types',
     'introspection.tests.IntrospectionTests.test_get_constraints',
     'introspection.tests.IntrospectionTests.test_get_table_description_types',
     'introspection.tests.IntrospectionTests.test_smallautofield',

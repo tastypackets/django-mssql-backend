@@ -1,12 +1,15 @@
 import pyodbc as Database
+from collections import namedtuple
 
 from django.db.backends.base.introspection import (
-    BaseDatabaseIntrospection, FieldInfo, TableInfo,
+    BaseDatabaseIntrospection, TableInfo,
 )
 from django.db.models.indexes import Index
 
 SQL_AUTOFIELD = -777555
 SQL_BIGAUTOFIELD = -777444
+
+FieldInfo = namedtuple('FieldInfo', 'name type_code display_size internal_size precision scale null_ok default')
 
 
 class DatabaseIntrospection(BaseDatabaseIntrospection):

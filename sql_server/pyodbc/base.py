@@ -89,6 +89,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         'OneToOneField': 'int',
         'PositiveIntegerField': 'int',
         'PositiveSmallIntegerField': 'smallint',
+        'PositiveBigIntegerField': 'bigint',
         'SlugField': 'nvarchar(%(max_length)s)',
         'SmallAutoField': 'smallint IDENTITY (1, 1)',
         'SmallIntegerField': 'smallint',

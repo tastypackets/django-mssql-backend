@@ -3,6 +3,8 @@ from django.utils.functional import cached_property
 
 
 class DatabaseFeatures(BaseDatabaseFeatures):
+    can_introspect_json_field = False
+    has_native_json_field = False
     has_native_uuid_field = False
     allow_sliced_subqueries_with_in = False
     can_introspect_autofield = True
@@ -57,3 +59,11 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     @cached_property
     def supports_functions_in_partial_indexes(self):
         return self.connection.sql_server_version > 2005
+
+    @cached_property
+    def introspected_field_types(self):
+        return {
+            **super().introspected_field_types,
+            'GenericIPAddressField': 'CharField',
+            'PositiveBigIntegerField': 'BigIntegerField'
+        }
