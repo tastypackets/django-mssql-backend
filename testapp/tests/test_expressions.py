@@ -5,7 +5,7 @@ from django.db.models import IntegerField
 from django.db.models.expressions import Case, Exists, OuterRef, Subquery, Value, When
 from django.test import TestCase
 
-from ..models import Author, Comment, Post
+from ..models import Author, Comment, Editor, Post
 
 DJANGO3 = VERSION[0] >= 3
 
@@ -20,6 +20,18 @@ class TestSubquery(TestCase):
         Post.objects.annotate(
             post_exists=Subquery(newest.values('text')[:1])
         ).filter(post_exists=True).count()
+
+
+class TestBulkUpdate(TestCase):
+    def test_set_null(self):
+        author = Author.objects.create(name="author")
+        editor = Editor.objects.create(name="editor")
+
+        posts = [
+            Post.objects.create(title="foo", author=author, alt_editor=editor),
+        ]
+        posts[0].alt_editor = None
+        Post.objects.bulk_update(posts, ['alt_editor'])
 
 
 class TestExists(TestCase):
