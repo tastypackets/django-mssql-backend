@@ -28,6 +28,7 @@ Installation
 ------------
 
 1. Install pyodbc and Django
+  - `pyodbc has some pre-requisites <https://github.com/mkleehammer/pyodbc/wiki/Install>`__
 
 2. Install django-mssql-backend ::
 
